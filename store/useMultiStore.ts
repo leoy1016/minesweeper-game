@@ -67,6 +67,7 @@ export const useMultiStore = create<MultiplayerState>((set, get) => ({
   flagMode: false,
 
   joinRoom: (roomId, players, you, seed) => {
+    console.log('Multiplayer store joinRoom called:', { roomId, players, you, seed })
     const config = DIFFICULTIES.multi
     const board = generateBoard(config.width, config.height, config.mineCount, undefined, seed)
     
@@ -79,6 +80,7 @@ export const useMultiStore = create<MultiplayerState>((set, get) => ({
       result: null,
       flagMode: false,
     })
+    console.log('Multiplayer store state set to waiting')
   },
 
   updatePlayers: (players) => {
@@ -86,6 +88,7 @@ export const useMultiStore = create<MultiplayerState>((set, get) => ({
   },
 
   startGame: (seed) => {
+    console.log('Multiplayer store startGame called with seed:', seed)
     const config = DIFFICULTIES.multi
     const board = generateBoard(config.width, config.height, config.mineCount, undefined, seed)
     
@@ -96,6 +99,7 @@ export const useMultiStore = create<MultiplayerState>((set, get) => ({
       currentPlayer: 'A',
       turnEndsAt: Date.now() + 10000, // 10 seconds
     })
+    console.log('Multiplayer store state set to playing')
   },
 
   makeMove: (x, y, type) => {

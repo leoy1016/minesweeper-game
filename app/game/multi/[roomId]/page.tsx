@@ -41,12 +41,16 @@ export default function MultiplayerGame() {
       
       try {
         const gameData = await multiplayerClient.joinRoom(roomId)
+        console.log('Game data received:', gameData)
         joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
         setHasJoined(true)
         
         // Start game when both players are ready
         if (gameData.players.length === 2) {
+          console.log('Starting game with 2 players')
           startGame(gameData.seed)
+        } else {
+          console.log('Waiting for more players, current count:', gameData.players.length)
         }
         
         setIsConnected(true)
