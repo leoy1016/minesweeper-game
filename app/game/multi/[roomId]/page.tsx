@@ -45,6 +45,8 @@ export default function MultiplayerGame() {
       try {
         const gameData = await multiplayerClient.joinRoom(roomId)
         console.log('Game data received:', gameData)
+        console.log('Players array:', gameData.players)
+        console.log('Players length:', gameData.players.length)
         joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
         hasJoinedRef.current = true
         
@@ -100,7 +102,7 @@ export default function MultiplayerGame() {
       }
       multiplayerClient.disconnect()
     }
-  }, [roomId, gameStatus, joinRoom, updatePlayers, startGame, makeMove, setResult])
+  }, [roomId])
 
   const handleReturnHome = () => {
     reset()
