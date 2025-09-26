@@ -19,26 +19,95 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   
   const { board, flagMode, gameStatus } = isMultiplayer ? multiStore : gameStore
 
-  // Canvas configuration
-  const DOT_SIZE = 12
-  const DOT_SPACING = 20
-  const CANVAS_PADDING = 30
+  // Animation state
+  const [spawnedRows, setSpawnedRows] = useState(0)
+  const [isExploding, setIsExploding] = useState(false)
+  const [explosionProgress, setExplosionProgress] = useState(0)
+
+  // Calculate fullscreen dimensions
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
+  
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      })
+    }
+    
+    updateDimensions()
+    window.addEventListener('resize', updateDimensions)
+    return () => window.removeEventListener('resize', updateDimensions)
+  }, [])
+  
+  const DOT_SIZE = Math.min(dimensions.width / board.width, dimensions.height / board.height) * 0.8
+  const DOT_SPACING = DOT_SIZE * 1.5
+  const CANVAS_PADDING = DOT_SIZE
   
   const canvasWidth = board.width * DOT_SPACING + CANVAS_PADDING * 2
   const canvasHeight = board.height * DOT_SPACING + CANVAS_PADDING * 2
+
+  // Spawn animation
+  useEffect(() => {
+    if (spawnedRows < board.height) {
+      const timer = setTimeout(() => {
+        setSpawnedRows(prev => prev + 1)
+      }, 50) // 50ms per row
+      
+      return () => clearTimeout(timer)
+    }
+  }, [spawnedRows, board.height])
+
+  // Reset spawn animation when board changes
+  useEffect(() => {
+    setSpawnedRows(0)
+    setIsExploding(false)
+    setExplosionProgress(0)
+  }, [board.width, board.height])
+
+  // Check for mine explosion
+  useEffect(() => {
+    if (gameStatus === 'lost' && !isExploding) {
+      setIsExploding(true)
+      // Animate explosion over 1 second
+      const startTime = Date.now()
+      const duration = 1000
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        setExplosionProgress(progress)
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate)
+        }
+      }
+      
+      requestAnimationFrame(animate)
+    }
+  }, [gameStatus, isExploding])
 
   const drawCell = useCallback((
     ctx: CanvasRenderingContext2D,
     cell: Cell,
     x: number,
-    y: number
+    y: number,
+    alpha: number = 1
   ) => {
     const centerX = CANVAS_PADDING + x * DOT_SPACING + DOT_SPACING / 2
     const centerY = CANVAS_PADDING + y * DOT_SPACING + DOT_SPACING / 2
 
     ctx.save()
+    ctx.globalAlpha = alpha
     
-    if (cell.state === 'hidden') {
+    if (isExploding) {
+      // During explosion, all dots turn red gradually
+      const redIntensity = explosionProgress
+      ctx.fillStyle = `rgba(255, 0, 0, ${redIntensity})`
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (cell.state === 'hidden') {
       // White dot for hidden cells
       ctx.fillStyle = '#FFFFFF'
       ctx.beginPath()
@@ -60,7 +129,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       } else if (cell.type === 'number') {
         // Number with color
         ctx.fillStyle = getNumberColor(cell.count)
-        ctx.font = '12px monospace'
+        ctx.font = `${DOT_SIZE}px monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(cell.count.toString(), centerX, centerY)
@@ -70,7 +139,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     }
     
     ctx.restore()
-  }, [])
+  }, [isExploding, explosionProgress, DOT_SIZE])
 
   const drawBoard = useCallback(() => {
     const canvas = canvasRef.current
@@ -83,16 +152,20 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Draw all cells
+    // Draw cells with spawn animation
     for (let y = 0; y < board.height; y++) {
+      // Only draw rows that have been spawned
+      if (y >= spawnedRows) break
+      
       for (let x = 0; x < board.width; x++) {
         const cell = board.cells[y][x]
-        drawCell(ctx, cell, x, y)
+        const alpha = y < spawnedRows ? 1 : 0
+        drawCell(ctx, cell, x, y, alpha)
       }
     }
 
     // Draw hover effect
-    if (hoveredCell && gameStatus === 'playing') {
+    if (hoveredCell && gameStatus === 'playing' && !isExploding) {
       const { x, y } = hoveredCell
       const cell = board.cells[y][x]
       
@@ -112,7 +185,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         ctx.restore()
       }
     }
-  }, [board, hoveredCell, gameStatus, flagMode, drawCell])
+  }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell, isExploding])
 
   // Redraw when dependencies change
   useEffect(() => {
@@ -144,7 +217,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const cell = getCellFromMouse(e)
-    if (!cell || gameStatus !== 'playing') return
+    if (!cell || gameStatus !== 'playing' || isExploding) return
 
     if (flagMode) {
       if (isMultiplayer) {
@@ -159,7 +232,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         gameStore.revealCell(cell.x, cell.y)
       }
     }
-  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore])
+  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore, isExploding])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -171,7 +244,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
           gameStore.toggleFlagMode()
         }
       } else if (e.key === 'Enter' || e.key === ' ') {
-        if (hoveredCell && gameStatus === 'playing') {
+        if (hoveredCell && gameStatus === 'playing' && !isExploding) {
           if (flagMode) {
             if (isMultiplayer) {
               multiStore.toggleFlag(hoveredCell.x, hoveredCell.y)
@@ -191,18 +264,15 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore])
+  }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore, isExploding])
 
   return (
-    <div className="flex flex-col justify-center items-center py-8">
-      <div className="text-white mb-4 text-sm">
-        Board: {board.width}x{board.height} | Mines: {board.mineCount} | Status: {gameStatus}
-      </div>
+    <div className="flex justify-center items-center min-h-screen">
       <canvas
         ref={canvasRef}
         width={canvasWidth}
         height={canvasHeight}
-        className="cursor-pointer border border-gray-600"
+        className="cursor-pointer"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}

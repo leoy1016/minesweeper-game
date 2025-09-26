@@ -3,7 +3,6 @@
 import { Flag } from 'lucide-react'
 import { useGameStore } from '@/store/useGameStore'
 import { useMultiStore } from '@/store/useMultiStore'
-import { motion } from 'framer-motion'
 
 interface HUDProps {
   isMultiplayer?: boolean
@@ -20,15 +19,11 @@ export default function HUD({ isMultiplayer = false }: HUDProps) {
     <div className="fixed top-0 right-0 z-50 p-6 flex items-center gap-4">
       {isMultiplayer && (
         <div className="text-center">
-          <motion.div
-            className={`text-sm font-mono ${
-              isYourTurn ? 'text-green-400' : 'text-gray-400'
-            }`}
-            animate={{ opacity: isYourTurn ? [1, 0.5, 1] : 1 }}
-            transition={{ duration: 1, repeat: isYourTurn ? Infinity : 0 }}
-          >
+          <div className={`text-sm font-mono ${
+            isYourTurn ? 'text-green-400' : 'text-gray-400'
+          }`}>
             {isYourTurn ? 'your turn' : 'their turn'}
-          </motion.div>
+          </div>
           {timeLeft > 0 && (
             <div className="text-lg font-mono text-white">
               {timeLeft}s
@@ -37,19 +32,17 @@ export default function HUD({ isMultiplayer = false }: HUDProps) {
         </div>
       )}
       
-      <motion.button
+      <button
         onClick={toggleFlagMode}
         className={`p-2 rounded-lg transition-colors ${
           flagMode 
             ? 'bg-red-500 text-white' 
             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
         }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
         title="Toggle flag mode (F)"
       >
         <Flag size={20} />
-      </motion.button>
+      </button>
     </div>
   )
 }

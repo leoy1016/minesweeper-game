@@ -7,7 +7,7 @@ import BoardCanvas from '@/components/BoardCanvas'
 import { useGameStore } from '@/store/useGameStore'
 
 export default function EasyGame() {
-  const { startGame, gameStatus, resetGame, board } = useGameStore()
+  const { startGame, gameStatus, resetGame } = useGameStore()
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -63,10 +63,8 @@ export default function EasyGame() {
   return (
     <div className="min-h-screen bg-black">
       <Header isInGame={true} />
-      <div className="pt-20">
-        <HUD isMultiplayer={false} />
-        <BoardCanvas isMultiplayer={false} />
-      </div>
+      <HUD isMultiplayer={false} />
+      <BoardCanvas isMultiplayer={false} />
     </div>
   )
 }
