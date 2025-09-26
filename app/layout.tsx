@@ -22,6 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${cutiveMono.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         {children}
       </body>
