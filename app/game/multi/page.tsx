@@ -16,6 +16,8 @@ export default function MultiplayerLobby() {
     setIsCreating(true)
     try {
       const { roomId } = await multiplayerClient.createRoom()
+      // The room creator should join the room they created
+      await multiplayerClient.joinRoom(roomId)
       router.push(`/game/multi/${roomId}`)
     } catch (error) {
       console.error('Failed to create room:', error)

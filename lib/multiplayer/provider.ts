@@ -27,9 +27,15 @@ class DevLoopbackProvider implements RealtimeProvider {
       throw new Error('Room not found')
     }
     
+    // Check if room is already full
+    if (room.players.length >= 2) {
+      throw new Error('Room is full')
+    }
+    
     const playerId = `player_${Date.now()}`
     room.players.push(playerId)
     
+    // Assign player based on current count
     const you: Player = room.players.length === 1 ? 'A' : 'B'
     
     // Notify all subscribers about the join

@@ -17,6 +17,7 @@ export default function MultiplayerGame() {
   
   const {
     joinRoom,
+    updatePlayers,
     startGame,
     makeMove,
     setResult,
@@ -49,6 +50,7 @@ export default function MultiplayerGame() {
         unsubscribe = multiplayerClient.subscribe((event: ServerEvent) => {
           switch (event.type) {
             case 'Joined':
+              updatePlayers(event.players)
               if (event.players.length === 2) {
                 startGame(event.seed)
               }
@@ -85,7 +87,7 @@ export default function MultiplayerGame() {
       }
       multiplayerClient.disconnect()
     }
-  }, [roomId, joinRoom, startGame, makeMove, setResult, you])
+  }, [roomId, joinRoom, updatePlayers, startGame, makeMove, setResult, you])
 
   const handleReturnHome = () => {
     reset()

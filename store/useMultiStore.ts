@@ -28,6 +28,7 @@ interface MultiplayerState {
   
   // Actions
   joinRoom: (roomId: string, players: string[], you: Player, seed: number) => void
+  updatePlayers: (players: string[]) => void
   startGame: (seed: number) => void
   makeMove: (x: number, y: number, type: 'reveal' | 'flag') => void
   toggleFlag: (x: number, y: number) => void
@@ -78,6 +79,10 @@ export const useMultiStore = create<MultiplayerState>((set, get) => ({
       result: null,
       flagMode: false,
     })
+  },
+
+  updatePlayers: (players) => {
+    set({ players })
   },
 
   startGame: (seed) => {
