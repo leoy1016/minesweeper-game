@@ -191,6 +191,15 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         ctx.fill()
         ctx.restore()
       }
+      
+      // Debug: Draw grid coordinates
+      ctx.save()
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = '12px monospace'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'top'
+      ctx.fillText(`Cell: ${x},${y}`, 10, 10)
+      ctx.restore()
     }
   }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell, isExploding])
 
@@ -204,14 +213,24 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     if (!canvas) return null
 
     const rect = canvas.getBoundingClientRect()
-    const x = Math.floor((e.clientX - rect.left - CANVAS_PADDING) / DOT_SPACING)
-    const y = Math.floor((e.clientY - rect.top - CANVAS_PADDING) / DOT_SPACING)
+    
+    // Calculate the scale factor between the canvas display size and actual canvas size
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    
+    // Convert mouse coordinates to canvas coordinates
+    const canvasX = (e.clientX - rect.left) * scaleX
+    const canvasY = (e.clientY - rect.top) * scaleY
+    
+    // Convert to grid coordinates
+    const x = Math.floor((canvasX - CANVAS_PADDING) / DOT_SPACING)
+    const y = Math.floor((canvasY - CANVAS_PADDING) / DOT_SPACING)
 
     if (x >= 0 && x < board.width && y >= 0 && y < board.height) {
       return { x, y }
     }
     return null
-  }, [board.width, board.height])
+  }, [board.width, board.height, DOT_SPACING, CANVAS_PADDING])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const cell = getCellFromMouse(e)
