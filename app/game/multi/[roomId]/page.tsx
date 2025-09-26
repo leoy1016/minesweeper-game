@@ -31,11 +31,15 @@ export default function MultiplayerGame() {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const hasJoinedRef = useRef(false)
-  const [isInitialized, setIsInitialized] = useState(false)
+  const unsubscribeRef = useRef<(() => void) | null>(null)
 
   // Initialize game only once when component mounts
   useEffect(() => {
-    if (isInitialized) return
+    // Prevent multiple initializations
+    if (hasJoinedRef.current) {
+      console.log('Already joined, skipping initialization')
+      return
+    }
     
     const initializeGame = async () => {
       try {
@@ -44,6 +48,7 @@ export default function MultiplayerGame() {
         console.log('Players array:', gameData.players)
         console.log('Players length:', gameData.players.length)
         joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
+        hasJoinedRef.current = true
         
         // Only start game if there are actually 2 different players
         if (gameData.players.length === 2) {
@@ -54,10 +59,9 @@ export default function MultiplayerGame() {
         }
         
         setIsConnected(true)
-        setIsInitialized(true)
 
         // Subscribe to game events only after successful room join
-        const unsubscribe = multiplayerClient.subscribe((event: ServerEvent) => {
+        unsubscribeRef.current = multiplayerClient.subscribe((event: ServerEvent) => {
           switch (event.type) {
             case 'Joined':
               updatePlayers(event.players)
@@ -83,12 +87,6 @@ export default function MultiplayerGame() {
               break
           }
         })
-
-        // Store unsubscribe function for cleanup
-        return () => {
-          unsubscribe()
-          multiplayerClient.disconnect()
-        }
       } catch (err) {
         setError('Failed to join room')
         console.error('Join error:', err)
@@ -96,7 +94,16 @@ export default function MultiplayerGame() {
     }
 
     initializeGame()
-  }, [roomId, isInitialized])
+
+    // Cleanup function
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current()
+        unsubscribeRef.current = null
+      }
+      multiplayerClient.disconnect()
+    }
+  }, [roomId])
 
   const handleReturnHome = () => {
     reset()
