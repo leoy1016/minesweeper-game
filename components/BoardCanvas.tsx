@@ -40,14 +40,19 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     return () => window.removeEventListener('resize', updateDimensions)
   }, [])
   
-  // Calculate board size to take up middle 50% of screen with margins
-  const maxBoardWidth = dimensions.width * 0.5  // 50% of screen width
-  const maxBoardHeight = dimensions.height * 0.5  // 50% of screen height
+  // Calculate board size to take up more space (70% of screen)
+  const maxBoardWidth = dimensions.width * 0.7  // 70% of screen width
+  const maxBoardHeight = dimensions.height * 0.7  // 70% of screen height
   
-  const DOT_SIZE = Math.min(
+  // Base dot size calculation
+  let baseDotSize = Math.min(
     maxBoardWidth / board.width / 2,  // Divide by 2 for spacing
     maxBoardHeight / board.height / 2
   )
+  
+  // Make dots larger for medium and hard difficulties
+  const difficultyMultiplier = board.width > 10 ? 1.3 : 1.0  // Medium (16x16) and Hard (30x16) get 30% larger dots
+  const DOT_SIZE = baseDotSize * difficultyMultiplier
   const DOT_SPACING = DOT_SIZE * 2
   const CANVAS_PADDING = DOT_SIZE
   

@@ -35,7 +35,7 @@ export default function HUD({ isMultiplayer = false }: HUDProps) {
       
       {/* Mine counter */}
       <div className="text-white font-mono text-lg">
-        {currentBoard.mineCount - currentBoard.flaggedCount}
+        {Math.max(0, currentBoard.mineCount - currentBoard.flaggedCount)}
       </div>
       
       <button

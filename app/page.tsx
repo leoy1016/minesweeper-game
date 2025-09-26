@@ -46,6 +46,16 @@ export default function Home() {
           ))}
         </div>
       </div>
+      
+      {/* Credits link */}
+      <div className="absolute bottom-6 left-6">
+        <a 
+          href="/credits" 
+          className="text-gray-400 hover:text-white transition-colors cursor-pointer font-mono text-sm"
+        >
+          credits
+        </a>
+      </div>
     </div>
   )
 }
