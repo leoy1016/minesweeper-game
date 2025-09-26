@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
 import HUD from '@/components/HUD'
 import BoardCanvas from '@/components/BoardCanvas'
-import TypewriterText from '@/components/TypewriterText'
 import { useMultiStore } from '@/store/useMultiStore'
 import { multiplayerClient } from '@/lib/multiplayer/client'
 import { ServerEvent } from '@/lib/multiplayer/protocol'
@@ -14,6 +12,10 @@ import { ServerEvent } from '@/lib/multiplayer/protocol'
 export default function MultiplayerGame() {
   const params = useParams()
   const roomId = params.roomId as string
+  
+  const [status, setStatus] = useState<'connecting' | 'waiting' | 'playing' | 'finished' | 'error'>('connecting')
+  const [error, setError] = useState<string | null>(null)
+  const [roomCode, setRoomCode] = useState(roomId)
   
   const {
     joinRoom,
@@ -27,202 +29,155 @@ export default function MultiplayerGame() {
     players,
     reset
   } = useMultiStore()
-  
-  const [isConnected, setIsConnected] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const hasJoinedRef = useRef(false)
+
+  const hasInitialized = useRef(false)
   const unsubscribeRef = useRef<(() => void) | null>(null)
 
-  // Initialize game only once when component mounts
+  // Initialize the game once
   useEffect(() => {
-    // Prevent multiple initializations
-    if (hasJoinedRef.current) {
-      console.log('Already joined, skipping initialization')
-      return
-    }
+    if (hasInitialized.current) return
     
-    const initializeGame = async () => {
+    const init = async () => {
       try {
-        const gameData = await multiplayerClient.joinRoom(roomId)
-        console.log('Game data received:', gameData)
-        console.log('Players array:', gameData.players)
-        console.log('Players length:', gameData.players.length)
-        joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
-        hasJoinedRef.current = true
+        console.log('Initializing multiplayer game for room:', roomId)
+        hasInitialized.current = true
         
-        // Only start game if there are actually 2 different players
+        const gameData = await multiplayerClient.joinRoom(roomId)
+        console.log('Joined room:', gameData)
+        
+        joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
+        setStatus('waiting')
+        
+        // If we already have 2 players, start immediately
         if (gameData.players.length === 2) {
-          console.log('Starting game with 2 players')
+          console.log('Starting game immediately with 2 players')
           startGame(gameData.seed)
-        } else {
-          console.log('Waiting for more players, current count:', gameData.players.length)
+          setStatus('playing')
         }
         
-        setIsConnected(true)
-
-        // Subscribe to game events only after successful room join
+        // Subscribe to events
         unsubscribeRef.current = multiplayerClient.subscribe((event: ServerEvent) => {
+          console.log('Received event:', event)
           switch (event.type) {
             case 'Joined':
               updatePlayers(event.players)
               if (event.players.length === 2) {
                 startGame(event.seed)
+                setStatus('playing')
               }
               break
             case 'Start':
               startGame(event.seed)
+              setStatus('playing')
               break
             case 'Action':
-              // Handle other player's moves
               if (event.playerId !== you) {
                 makeMove(event.x, event.y, event.action)
               }
               break
-            case 'State':
-              // Update game state
-              // This would need to be implemented based on the actual state structure
-              break
             case 'Result':
               setResult(event)
+              setStatus('finished')
               break
           }
         })
+        
       } catch (err) {
+        console.error('Failed to join room:', err)
         setError('Failed to join room')
-        console.error('Join error:', err)
+        setStatus('error')
       }
     }
-
-    initializeGame()
-
-    // Cleanup function
+    
+    init()
+    
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current()
-        unsubscribeRef.current = null
       }
       multiplayerClient.disconnect()
     }
-  }, [roomId])
+  }, [roomId]) // Only depend on roomId
 
   const handleReturnHome = () => {
     reset()
     multiplayerClient.disconnect()
-    
-    // Fade to black and navigate
-    const overlay = document.createElement('div')
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000000;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    `
-    document.body.appendChild(overlay)
-    
-    requestAnimationFrame(() => {
-      overlay.style.opacity = '1'
-    })
-    
-    setTimeout(() => {
-      window.location.href = '/'
-    }, 500)
+    window.location.href = '/'
   }
 
-  if (error) {
+  if (status === 'error') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center">
           <div className="text-red-400 text-xl font-mono mb-4">{error}</div>
-          <motion.button
+          <button
             onClick={handleReturnHome}
             className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             return home
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     )
   }
 
-  if (!isConnected) {
+  if (status === 'connecting') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center">
           <div className="text-white text-xl font-mono">Connecting...</div>
-        </motion.div>
+          <div className="text-gray-400 font-mono text-sm mt-2">
+            Room: {roomCode}
+          </div>
+        </div>
       </div>
     )
   }
 
-  if (gameStatus === 'waiting') {
+  if (status === 'waiting') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center">
           <div className="text-white text-xl font-mono mb-4">
             Waiting for players... ({players.length}/2)
           </div>
-          <div className="text-gray-400 font-mono text-sm">
-            Room Code: {roomId}
+          <div className="text-gray-400 font-mono text-sm mb-8">
+            Room Code: {roomCode}
           </div>
-        </motion.div>
+          <button
+            onClick={handleReturnHome}
+            className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            return home
+          </button>
+        </div>
       </div>
     )
   }
 
-  if (gameStatus === 'finished' && result) {
+  if (status === 'finished' && result) {
     const isWinner = result.winner === you
     const winText = isWinner ? 'you win' : 'you lost'
     const winColor = isWinner ? 'text-green-400' : 'text-red-400'
     
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <TypewriterText
-            text={winText}
-            speed={150}
-            className={`text-4xl ${winColor} mb-4`}
-          />
+        <div className="text-center">
+          <div className={`text-4xl ${winColor} mb-4`}>
+            {winText}
+          </div>
           <div className="text-gray-400 font-mono text-sm mb-8">
             {result.reason === 'mine' ? 'Hit a mine' : 
              result.reason === 'timeout' ? 'Time ran out' : 
              'All safe cells revealed'}
           </div>
-          <motion.button
+          <button
             onClick={handleReturnHome}
             className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             return home
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     )
   }
