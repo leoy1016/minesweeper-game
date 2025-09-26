@@ -9,7 +9,7 @@ import TypewriterText from '@/components/TypewriterText'
 import { useGameStore } from '@/store/useGameStore'
 
 export default function MediumGame() {
-  const { startGame, gameStatus, resetGame } = useGameStore()
+  const { startGame, gameStatus, resetGame, board } = useGameStore()
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -20,35 +20,14 @@ export default function MediumGame() {
   if (!isClient) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white text-xl">Loading...</div>
       </div>
     )
   }
 
   const handleReturnHome = () => {
     resetGame()
-    // Fade to black and navigate
-    const overlay = document.createElement('div')
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000000;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    `
-    document.body.appendChild(overlay)
-    
-    requestAnimationFrame(() => {
-      overlay.style.opacity = '1'
-    })
-    
-    setTimeout(() => {
-      window.location.href = '/'
-    }, 500)
+    window.location.href = '/'
   }
 
   if (gameStatus === 'won') {
@@ -108,8 +87,10 @@ export default function MediumGame() {
   return (
     <div className="min-h-screen bg-black">
       <Header isInGame={true} />
-      <HUD isMultiplayer={false} />
-      <BoardCanvas isMultiplayer={false} />
+      <div className="pt-20">
+        <HUD isMultiplayer={false} />
+        <BoardCanvas isMultiplayer={false} />
+      </div>
     </div>
   )
 }

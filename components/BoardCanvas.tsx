@@ -245,12 +245,15 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore])
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
+    <div className="flex flex-col justify-center items-center py-8">
+      <div className="text-white mb-4 text-sm">
+        Board: {board.width}x{board.height} | Mines: {board.mineCount} | Status: {gameStatus}
+      </div>
       <canvas
         ref={canvasRef}
         width={canvasWidth}
         height={canvasHeight}
-        className="cursor-pointer"
+        className="cursor-pointer border border-gray-600"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
