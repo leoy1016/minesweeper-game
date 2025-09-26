@@ -139,9 +139,9 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     ctx.globalAlpha = alpha
     
     if (isExploding) {
-      // During explosion, all dots turn red gradually
+      // During explosion, all dots turn red gradually (less saturated)
       const redIntensity = explosionProgress
-      ctx.fillStyle = `rgba(255, 0, 0, ${redIntensity})`
+      ctx.fillStyle = `rgba(200, 100, 100, ${redIntensity})`
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
@@ -159,8 +159,8 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (cell.state === 'flagged') {
-      // Red dot for flagged cells
-      ctx.fillStyle = '#FF0000'
+      // Less saturated red dot for flagged cells
+      ctx.fillStyle = '#CC6666'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
