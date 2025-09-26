@@ -9,9 +9,10 @@ interface HUDProps {
 }
 
 export default function HUD({ isMultiplayer = false }: HUDProps) {
-  const { flagMode, toggleFlagMode } = useGameStore()
-  const { currentPlayer, you, turnEndsAt, gameStatus } = useMultiStore()
+  const { flagMode, toggleFlagMode, board } = useGameStore()
+  const { currentPlayer, you, turnEndsAt, gameStatus, board: multiBoard } = useMultiStore()
   
+  const currentBoard = isMultiplayer ? multiBoard : board
   const isYourTurn = isMultiplayer && currentPlayer === you && gameStatus === 'playing'
   const timeLeft = turnEndsAt ? Math.max(0, Math.ceil((turnEndsAt - Date.now()) / 1000)) : 0
 
@@ -31,6 +32,11 @@ export default function HUD({ isMultiplayer = false }: HUDProps) {
           )}
         </div>
       )}
+      
+      {/* Mine counter */}
+      <div className="text-white font-mono text-lg">
+        {currentBoard.mineCount - currentBoard.flaggedCount}
+      </div>
       
       <button
         onClick={toggleFlagMode}

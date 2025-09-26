@@ -134,9 +134,10 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
         ctx.fill()
       } else if (cell.type === 'number') {
-        // Number with color
+        // Number with color - proportionally sized
         ctx.fillStyle = getNumberColor(cell.count)
-        ctx.font = `${Math.max(DOT_SIZE * 0.6, 8)}px monospace`
+        const fontSize = Math.max(DOT_SIZE * 0.7, 10)
+        ctx.font = `${fontSize}px monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(cell.count.toString(), centerX, centerY)
@@ -192,14 +193,6 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         ctx.restore()
       }
       
-      // Debug: Draw grid coordinates
-      ctx.save()
-      ctx.fillStyle = '#FFFFFF'
-      ctx.font = '12px monospace'
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'top'
-      ctx.fillText(`Cell: ${x},${y}`, 10, 10)
-      ctx.restore()
     }
   }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell, isExploding])
 

@@ -44,21 +44,16 @@ export default function HardGame() {
     )
   }
 
-  if (gameStatus === 'lost') {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl text-red-400 mb-8">you lost</div>
-          <button
-            onClick={handleReturnHome}
-            className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            return home
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Auto-redirect to home when lost (after explosion animation)
+  useEffect(() => {
+    if (gameStatus === 'lost') {
+      const timer = setTimeout(() => {
+        handleReturnHome()
+      }, 2000) // Wait 2 seconds for explosion animation
+      
+      return () => clearTimeout(timer)
+    }
+  }, [gameStatus, handleReturnHome])
 
   return (
     <div className="min-h-screen bg-black">
