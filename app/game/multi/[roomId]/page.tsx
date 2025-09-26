@@ -30,14 +30,19 @@ export default function MultiplayerGame() {
   
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasJoined, setHasJoined] = useState(false)
 
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
 
     const initializeGame = async () => {
+      // Prevent multiple join attempts
+      if (hasJoined) return
+      
       try {
         const gameData = await multiplayerClient.joinRoom(roomId)
         joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
+        setHasJoined(true)
         
         // Start game when both players are ready
         if (gameData.players.length === 2) {
@@ -87,7 +92,7 @@ export default function MultiplayerGame() {
       }
       multiplayerClient.disconnect()
     }
-  }, [roomId, joinRoom, updatePlayers, startGame, makeMove, setResult, you])
+  }, [roomId, hasJoined, joinRoom, updatePlayers, startGame, makeMove, setResult, you])
 
   const handleReturnHome = () => {
     reset()
