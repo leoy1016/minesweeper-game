@@ -27,111 +27,67 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   const canvasWidth = board.width * DOT_SPACING + CANVAS_PADDING * 2
   const canvasHeight = board.height * DOT_SPACING + CANVAS_PADDING * 2
 
-
-  // Animation state
-  const [spawnedRows, setSpawnedRows] = useState(0)
-
-  // Spawn animation
-  useEffect(() => {
-    if (spawnedRows < board.height) {
-      const timer = setTimeout(() => {
-        setSpawnedRows(prev => prev + 1)
-      }, 50) // 50ms per row
-      
-      return () => clearTimeout(timer)
-    }
-  }, [spawnedRows, board.height])
-
-  // Reset spawn animation when board changes
-  useEffect(() => {
-    setSpawnedRows(0)
-  }, [board.width, board.height])
-
   const drawCell = useCallback((
     ctx: CanvasRenderingContext2D,
     cell: Cell,
     x: number,
-    y: number,
-    alpha: number = 1
+    y: number
   ) => {
     const centerX = CANVAS_PADDING + x * DOT_SPACING + DOT_SPACING / 2
     const centerY = CANVAS_PADDING + y * DOT_SPACING + DOT_SPACING / 2
 
     ctx.save()
-    ctx.globalAlpha = alpha
-
+    
     if (cell.state === 'hidden') {
-      // White dot
+      // White dot for hidden cells
       ctx.fillStyle = '#FFFFFF'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (cell.state === 'flagged') {
-      // Red dot for flagged
+      // Red dot for flagged cells
       ctx.fillStyle = '#FF0000'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (cell.state === 'revealed') {
       if (cell.type === 'mine') {
-        // Mine - red dot
-        ctx.fillStyle = '#FF0000'
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
-        ctx.fill()
-      } else if (cell.type === 'empty') {
-        // Safe - green dot
-        ctx.fillStyle = '#00FF00'
+        // Black dot for mines
+        ctx.fillStyle = '#000000'
         ctx.beginPath()
         ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
         ctx.fill()
       } else if (cell.type === 'number') {
-        // Number - colored dot
+        // Number with color
         ctx.fillStyle = getNumberColor(cell.count)
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
-        ctx.fill()
-        
-        // Draw number
-        ctx.fillStyle = '#000000'
-        ctx.font = '10px monospace'
+        ctx.font = '12px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(cell.count.toString(), centerX, centerY)
+      } else {
+        // Empty cell - no dot
       }
     }
-
+    
     ctx.restore()
   }, [])
 
   const drawBoard = useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
-      console.log('No canvas ref')
-      return
-    }
+    if (!canvas) return
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      console.log('No canvas context')
-      return
-    }
-
+    if (!ctx) return
 
     // Clear canvas
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-
-    // Draw cells
+    // Draw all cells
     for (let y = 0; y < board.height; y++) {
-      // Only draw rows that have been spawned
-      if (y >= spawnedRows) break
-      
       for (let x = 0; x < board.width; x++) {
         const cell = board.cells[y][x]
-        const alpha = y < spawnedRows ? 1 : 0
-        drawCell(ctx, cell, x, y, alpha)
+        drawCell(ctx, cell, x, y)
       }
     }
 
@@ -156,29 +112,24 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         ctx.restore()
       }
     }
-  }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell])
+  }, [board, hoveredCell, gameStatus, flagMode, drawCell])
 
   // Redraw when dependencies change
   useEffect(() => {
     drawBoard()
   }, [drawBoard])
 
-
   const getCellFromMouse = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas) return null
 
     const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const x = Math.floor((e.clientX - rect.left - CANVAS_PADDING) / DOT_SPACING)
+    const y = Math.floor((e.clientY - rect.top - CANVAS_PADDING) / DOT_SPACING)
 
-    const cellX = Math.floor((x - CANVAS_PADDING) / DOT_SPACING)
-    const cellY = Math.floor((y - CANVAS_PADDING) / DOT_SPACING)
-
-    if (cellX >= 0 && cellX < board.width && cellY >= 0 && cellY < board.height) {
-      return { x: cellX, y: cellY }
+    if (x >= 0 && x < board.width && y >= 0 && y < board.height) {
+      return { x, y }
     }
-
     return null
   }, [board.width, board.height])
 
@@ -192,10 +143,8 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   }, [])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (gameStatus !== 'playing') return
-
     const cell = getCellFromMouse(e)
-    if (!cell) return
+    if (!cell || gameStatus !== 'playing') return
 
     if (flagMode) {
       if (isMultiplayer) {

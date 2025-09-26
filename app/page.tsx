@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import ModeOption from '@/components/ModeOption'
 
@@ -20,9 +19,9 @@ export default function Home() {
       <Header isInGame={false} />
       
       {/* Background overlay that changes color on hover */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        animate={{
+      <div
+        className="absolute inset-0 pointer-events-none transition-colors duration-300"
+        style={{
           backgroundColor: hoveredMode 
             ? `color-mix(in srgb, ${hoveredMode === 'easy' ? 'var(--easy)' : 
                                    hoveredMode === 'medium' ? 'var(--medium)' :
@@ -30,34 +29,22 @@ export default function Home() {
                                    'var(--multi)'} 10%, black)`
             : 'transparent'
         }}
-        transition={{ duration: 0.3 }}
       />
       
       {/* Main content */}
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <motion.div
-          className="flex flex-col items-center gap-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          {MODES.map((mode, index) => (
-            <motion.div
+        <div className="flex flex-col items-center gap-8">
+          {MODES.map((mode) => (
+            <ModeOption
               key={mode.key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-            >
-              <ModeOption
-                mode={mode.key as 'easy' | 'medium' | 'hard' | 'multi'}
-                label={mode.label}
-                color={mode.color}
-                onHover={setHoveredMode}
-                isHovered={hoveredMode === mode.key}
-              />
-            </motion.div>
+              mode={mode.key as 'easy' | 'medium' | 'hard' | 'multi'}
+              label={mode.label}
+              color={mode.color}
+              onHover={setHoveredMode}
+              isHovered={hoveredMode === mode.key}
+            />
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   )

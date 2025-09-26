@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import Header from '@/components/Header'
 import HUD from '@/components/HUD'
 import BoardCanvas from '@/components/BoardCanvas'
-import TypewriterText from '@/components/TypewriterText'
 import { useGameStore } from '@/store/useGameStore'
 
 export default function EasyGame() {
@@ -33,26 +31,15 @@ export default function EasyGame() {
   if (gameStatus === 'won') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <TypewriterText
-            text="you win"
-            speed={150}
-            className="text-4xl text-green-400 mb-8"
-          />
-          <motion.button
+        <div className="text-center">
+          <div className="text-4xl text-green-400 mb-8">you win</div>
+          <button
             onClick={handleReturnHome}
             className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             return home
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     )
   }
@@ -60,26 +47,15 @@ export default function EasyGame() {
   if (gameStatus === 'lost') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <TypewriterText
-            text="you lost"
-            speed={150}
-            className="text-4xl text-red-400 mb-8"
-          />
-          <motion.button
+        <div className="text-center">
+          <div className="text-4xl text-red-400 mb-8">you lost</div>
+          <button
             onClick={handleReturnHome}
             className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             return home
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
       </div>
     )
   }
