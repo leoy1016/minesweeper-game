@@ -146,15 +146,15 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (isWinning) {
-      // During winning, all dots turn green gradually
+      // During winning, all dots turn green gradually (less saturated)
       const greenIntensity = winningProgress
-      ctx.fillStyle = `rgba(0, 255, 0, ${greenIntensity})`
+      ctx.fillStyle = `rgba(100, 200, 100, ${greenIntensity})`
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (cell.state === 'hidden') {
-      // Gray-white dot for hidden cells
-      ctx.fillStyle = '#D0D0D0'
+      // More gray dot for hidden cells
+      ctx.fillStyle = '#B8B8B8'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
