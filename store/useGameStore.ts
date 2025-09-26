@@ -36,6 +36,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameStatus: 'playing',
   flagMode: false,
   firstClick: true,
+  seed: 0,
 
   startGame: (difficulty, seed) => {
     const config = DIFFICULTIES[difficulty]
@@ -48,16 +49,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameStatus: 'playing',
       flagMode: false,
       firstClick: true,
+      seed: gameSeed,
     })
   },
 
   setFirstClick: (x, y) => {
-    const { board, firstClick } = get()
+    const { board, firstClick, seed } = get()
     
     if (!firstClick) return
     
     // Use the current board's dimensions and mine count for first click safety
-    const newBoard = generateBoard(board.width, board.height, board.mineCount, { x, y })
+    // Use the same seed to maintain consistency
+    const newBoard = generateBoard(board.width, board.height, board.mineCount, { x, y }, seed)
     
     set({
       board: newBoard,
@@ -144,6 +147,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameStatus: 'playing',
       flagMode: false,
       firstClick: true,
+      seed: 0,
     })
   },
 }))

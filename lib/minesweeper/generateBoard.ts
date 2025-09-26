@@ -8,7 +8,7 @@ export function generateBoard(
   firstClick?: { x: number; y: number },
   seed?: number
 ): Board {
-  const rng = new RNG(seed || 12345) // Use fixed seed for SSR compatibility
+  const rng = new RNG(seed || Math.floor(Math.random() * 1000000)) // Use random seed if none provided
   
   // Initialize empty board
   const cells: Cell[][] = []

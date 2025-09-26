@@ -23,6 +23,7 @@ export interface GameState {
   gameStatus: 'playing' | 'won' | 'lost'
   flagMode: boolean
   firstClick: boolean
+  seed: number
 }
 
 export interface Difficulty {

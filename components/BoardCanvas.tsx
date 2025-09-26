@@ -47,7 +47,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   const maxBoardHeight = dimensions.height * 0.7  // 70% of screen height
   
   // Base dot size calculation
-  let baseDotSize = Math.min(
+  const baseDotSize = Math.min(
     maxBoardWidth / board.width / 2,  // Divide by 2 for spacing
     maxBoardHeight / board.height / 2
   )
