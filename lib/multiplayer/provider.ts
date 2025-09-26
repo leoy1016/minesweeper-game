@@ -12,6 +12,8 @@ class DevLoopbackProvider implements RealtimeProvider {
     const roomId = Math.floor(1000 + Math.random() * 9000).toString()
     const seed = Math.floor(Math.random() * 1000000)
     
+    console.log(`Creating room ${roomId} with seed ${seed}`)
+    
     this.rooms.set(roomId, {
       seed,
       players: [],
@@ -26,6 +28,8 @@ class DevLoopbackProvider implements RealtimeProvider {
     if (!room) {
       throw new Error('Room not found')
     }
+    
+    console.log(`Joining room ${roomId}, current players:`, room.players.length)
     
     // Check if room is already full
     if (room.players.length >= 2) {
