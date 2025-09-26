@@ -1,4 +1,4 @@
-import { createRealtimeProvider } from './provider'
+import { ServerProvider } from './serverProvider'
 import { RealtimeProvider, ClientEvent, ServerEvent } from './protocol'
 
 class MultiplayerClient {
@@ -7,7 +7,7 @@ class MultiplayerClient {
   private unsubscribe: (() => void) | null = null
 
   constructor() {
-    this.provider = createRealtimeProvider()
+    this.provider = new ServerProvider()
   }
 
   async createRoom(): Promise<{ roomId: string; seed: number }> {

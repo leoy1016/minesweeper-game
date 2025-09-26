@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server'
+import { roomStore } from '@/lib/multiplayer/roomStore'
 
 export async function POST() {
   try {
-    // Generate a 4-digit room code
-    const roomId = Math.floor(1000 + Math.random() * 9000).toString()
-    const seed = Math.floor(Math.random() * 1000000)
-    
-    // In a real implementation, you would store this in a database
-    // For now, we'll just return the room code
+    const { roomId, seed } = roomStore.createRoom()
     
     return NextResponse.json({ 
       roomId, 
