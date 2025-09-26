@@ -154,7 +154,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       ctx.fill()
     } else if (cell.state === 'hidden') {
       // Gray-white dot for hidden cells
-      ctx.fillStyle = '#E5E5E5'
+      ctx.fillStyle = '#D0D0D0'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()

@@ -26,7 +26,7 @@ export default function Home() {
             ? `color-mix(in srgb, ${hoveredMode === 'easy' ? 'var(--easy)' : 
                                    hoveredMode === 'medium' ? 'var(--medium)' :
                                    hoveredMode === 'hard' ? 'var(--hard)' :
-                                   'var(--multi)'} 10%, black)`
+                                   'var(--multi)'} 20%, black)`
             : 'transparent'
         }}
       />

@@ -31,6 +31,17 @@ export default function EasyGame() {
     }
   }, [gameStatus, handleReturnHome])
 
+  // Auto-redirect to home when won (after winning animation)
+  useEffect(() => {
+    if (gameStatus === 'won') {
+      const timer = setTimeout(() => {
+        handleReturnHome()
+      }, 2000) // Wait 2 seconds for winning animation
+      
+      return () => clearTimeout(timer)
+    }
+  }, [gameStatus, handleReturnHome])
+
   if (!isClient) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -39,21 +50,6 @@ export default function EasyGame() {
     )
   }
 
-  if (gameStatus === 'won') {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl text-green-400 mb-8">you win</div>
-          <button
-            onClick={handleReturnHome}
-            className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            return home
-          </button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-black">
