@@ -29,7 +29,7 @@ export default function MultiplayerLobby() {
     
     setIsJoining(true)
     try {
-      await multiplayerClient.joinRoom(code)
+      // Just navigate to the room page - the join will happen there
       router.push(`/game/multi/${code}`)
     } catch (error) {
       console.error('Failed to join room:', error)

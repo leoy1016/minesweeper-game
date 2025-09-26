@@ -31,6 +31,8 @@ export default function MultiplayerGame() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null
+
     const initializeGame = async () => {
       try {
         const gameData = await multiplayerClient.joinRoom(roomId)
@@ -42,6 +44,33 @@ export default function MultiplayerGame() {
         }
         
         setIsConnected(true)
+
+        // Subscribe to game events only after successful room join
+        unsubscribe = multiplayerClient.subscribe((event: ServerEvent) => {
+          switch (event.type) {
+            case 'Joined':
+              if (event.players.length === 2) {
+                startGame(event.seed)
+              }
+              break
+            case 'Start':
+              startGame(event.seed)
+              break
+            case 'Action':
+              // Handle other player's moves
+              if (event.playerId !== you) {
+                makeMove(event.x, event.y, event.action)
+              }
+              break
+            case 'State':
+              // Update game state
+              // This would need to be implemented based on the actual state structure
+              break
+            case 'Result':
+              setResult(event)
+              break
+          }
+        })
       } catch (err) {
         setError('Failed to join room')
         console.error('Join error:', err)
@@ -50,35 +79,10 @@ export default function MultiplayerGame() {
 
     initializeGame()
 
-    // Subscribe to game events
-    const unsubscribe = multiplayerClient.subscribe((event: ServerEvent) => {
-      switch (event.type) {
-        case 'Joined':
-          if (event.players.length === 2) {
-            startGame(event.seed)
-          }
-          break
-        case 'Start':
-          startGame(event.seed)
-          break
-        case 'Action':
-          // Handle other player's moves
-          if (event.playerId !== you) {
-            makeMove(event.x, event.y, event.action)
-          }
-          break
-        case 'State':
-          // Update game state
-          // This would need to be implemented based on the actual state structure
-          break
-        case 'Result':
-          setResult(event)
-          break
-      }
-    })
-
     return () => {
-      unsubscribe()
+      if (unsubscribe) {
+        unsubscribe()
+      }
       multiplayerClient.disconnect()
     }
   }, [roomId, joinRoom, startGame, makeMove, setResult, you])

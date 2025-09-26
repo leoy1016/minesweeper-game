@@ -289,7 +289,12 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         gameStore.revealCell(cell.x, cell.y)
       }
     }
-  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore, isExploding, isWinning])
+    
+    // Force immediate redraw after state update
+    setTimeout(() => {
+      drawBoard()
+    }, 0)
+  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore, isExploding, isWinning, drawBoard])
 
   // Keyboard shortcuts
   useEffect(() => {
