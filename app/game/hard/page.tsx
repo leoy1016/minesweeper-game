@@ -10,10 +10,26 @@ export default function HardGame() {
   const { startGame, gameStatus, resetGame } = useGameStore()
   const [isClient, setIsClient] = useState(false)
 
+  const handleReturnHome = () => {
+    resetGame()
+    window.location.href = '/'
+  }
+
   useEffect(() => {
     setIsClient(true)
     startGame('hard')
   }, [startGame])
+
+  // Auto-redirect to home when lost (after explosion animation)
+  useEffect(() => {
+    if (gameStatus === 'lost') {
+      const timer = setTimeout(() => {
+        handleReturnHome()
+      }, 2000) // Wait 2 seconds for explosion animation
+      
+      return () => clearTimeout(timer)
+    }
+  }, [gameStatus, handleReturnHome])
 
   if (!isClient) {
     return (
@@ -21,11 +37,6 @@ export default function HardGame() {
         <div className="text-white text-xl">Loading...</div>
       </div>
     )
-  }
-
-  const handleReturnHome = () => {
-    resetGame()
-    window.location.href = '/'
   }
 
   if (gameStatus === 'won') {
@@ -43,17 +54,6 @@ export default function HardGame() {
       </div>
     )
   }
-
-  // Auto-redirect to home when lost (after explosion animation)
-  useEffect(() => {
-    if (gameStatus === 'lost') {
-      const timer = setTimeout(() => {
-        handleReturnHome()
-      }, 2000) // Wait 2 seconds for explosion animation
-      
-      return () => clearTimeout(timer)
-    }
-  }, [gameStatus, handleReturnHome])
 
   return (
     <div className="min-h-screen bg-black">
