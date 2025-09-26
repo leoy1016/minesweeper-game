@@ -23,6 +23,8 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   const [spawnedRows, setSpawnedRows] = useState(0)
   const [isExploding, setIsExploding] = useState(false)
   const [explosionProgress, setExplosionProgress] = useState(0)
+  const [isWinning, setIsWinning] = useState(false)
+  const [winningProgress, setWinningProgress] = useState(0)
 
   // Calculate fullscreen dimensions
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
@@ -75,6 +77,8 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     setSpawnedRows(0)
     setIsExploding(false)
     setExplosionProgress(0)
+    setIsWinning(false)
+    setWinningProgress(0)
   }, [board.width, board.height])
 
   // Check for mine explosion
@@ -99,6 +103,28 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     }
   }, [gameStatus, isExploding])
 
+  // Check for winning animation
+  useEffect(() => {
+    if (gameStatus === 'won' && !isWinning) {
+      setIsWinning(true)
+      // Animate winning over 1 second
+      const startTime = Date.now()
+      const duration = 1000
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        setWinningProgress(progress)
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate)
+        }
+      }
+      
+      requestAnimationFrame(animate)
+    }
+  }, [gameStatus, isWinning])
+
   const drawCell = useCallback((
     ctx: CanvasRenderingContext2D,
     cell: Cell,
@@ -119,9 +145,16 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
+    } else if (isWinning) {
+      // During winning, all dots turn green gradually
+      const greenIntensity = winningProgress
+      ctx.fillStyle = `rgba(0, 255, 0, ${greenIntensity})`
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
+      ctx.fill()
     } else if (cell.state === 'hidden') {
-      // White dot for hidden cells
-      ctx.fillStyle = '#FFFFFF'
+      // Gray-white dot for hidden cells
+      ctx.fillStyle = '#E5E5E5'
       ctx.beginPath()
       ctx.arc(centerX, centerY, DOT_SIZE / 2, 0, Math.PI * 2)
       ctx.fill()
@@ -152,7 +185,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     }
     
     ctx.restore()
-  }, [isExploding, explosionProgress, DOT_SIZE])
+  }, [isExploding, explosionProgress, isWinning, winningProgress, DOT_SIZE])
 
   const drawBoard = useCallback(() => {
     const canvas = canvasRef.current
@@ -178,7 +211,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     }
 
     // Draw hover effect
-    if (hoveredCell && gameStatus === 'playing' && !isExploding) {
+    if (hoveredCell && gameStatus === 'playing' && !isExploding && !isWinning) {
       const { x, y } = hoveredCell
       const cell = board.cells[y][x]
       
@@ -199,12 +232,12 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       }
       
     }
-  }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell, isExploding])
+  }, [board, spawnedRows, hoveredCell, gameStatus, flagMode, drawCell, isExploding, isWinning])
 
-  // Redraw when dependencies change
+  // Force immediate redraw when board changes
   useEffect(() => {
     drawBoard()
-  }, [drawBoard])
+  }, [board, drawBoard])
 
   const getCellFromMouse = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
@@ -241,7 +274,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const cell = getCellFromMouse(e)
-    if (!cell || gameStatus !== 'playing' || isExploding) return
+    if (!cell || gameStatus !== 'playing' || isExploding || isWinning) return
 
     if (flagMode) {
       if (isMultiplayer) {
@@ -256,7 +289,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
         gameStore.revealCell(cell.x, cell.y)
       }
     }
-  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore, isExploding])
+  }, [gameStatus, getCellFromMouse, flagMode, isMultiplayer, gameStore, multiStore, isExploding, isWinning])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -268,7 +301,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
           gameStore.toggleFlagMode()
         }
       } else if (e.key === 'Enter' || e.key === ' ') {
-        if (hoveredCell && gameStatus === 'playing' && !isExploding) {
+        if (hoveredCell && gameStatus === 'playing' && !isExploding && !isWinning) {
           if (flagMode) {
             if (isMultiplayer) {
               multiStore.toggleFlag(hoveredCell.x, hoveredCell.y)
@@ -288,7 +321,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore, isExploding])
+  }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore, isExploding, isWinning])
 
   return (
     <div className="flex justify-center items-center min-h-screen p-8">
