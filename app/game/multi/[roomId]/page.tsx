@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Header from '@/components/Header'
@@ -30,23 +30,27 @@ export default function MultiplayerGame() {
   
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hasJoined, setHasJoined] = useState(false)
+  const hasJoinedRef = useRef(false)
 
   useEffect(() => {
     let unsubscribe: (() => void) | null = null
 
     const initializeGame = async () => {
       // Prevent multiple join attempts
-      if (hasJoined) return
+      if (hasJoinedRef.current) {
+        console.log('Already joined, skipping')
+        return
+      }
       
       try {
         const gameData = await multiplayerClient.joinRoom(roomId)
         console.log('Game data received:', gameData)
         joinRoom(roomId, gameData.players, gameData.you, gameData.seed)
-        setHasJoined(true)
+        hasJoinedRef.current = true
         
-        // Start game when both players are ready
-        if (gameData.players.length === 2) {
+        // Only start game if there are actually 2 different players
+        // AND we haven't already started the game
+        if (gameData.players.length === 2 && gameStatus !== 'playing') {
           console.log('Starting game with 2 players')
           startGame(gameData.seed)
         } else {
@@ -96,7 +100,7 @@ export default function MultiplayerGame() {
       }
       multiplayerClient.disconnect()
     }
-  }, [roomId, hasJoined, joinRoom, updatePlayers, startGame, makeMove, setResult, you])
+  }, [roomId, gameStatus, joinRoom, updatePlayers, startGame, makeMove, setResult])
 
   const handleReturnHome = () => {
     reset()
