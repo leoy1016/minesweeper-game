@@ -40,8 +40,15 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
     return () => window.removeEventListener('resize', updateDimensions)
   }, [])
   
-  const DOT_SIZE = Math.min(dimensions.width / board.width, dimensions.height / board.height) * 0.8
-  const DOT_SPACING = DOT_SIZE * 1.5
+  // Calculate board size to take up middle 50% of screen with margins
+  const maxBoardWidth = dimensions.width * 0.5  // 50% of screen width
+  const maxBoardHeight = dimensions.height * 0.5  // 50% of screen height
+  
+  const DOT_SIZE = Math.min(
+    maxBoardWidth / board.width / 2,  // Divide by 2 for spacing
+    maxBoardHeight / board.height / 2
+  )
+  const DOT_SPACING = DOT_SIZE * 2
   const CANVAS_PADDING = DOT_SIZE
   
   const canvasWidth = board.width * DOT_SPACING + CANVAS_PADDING * 2
@@ -129,7 +136,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
       } else if (cell.type === 'number') {
         // Number with color
         ctx.fillStyle = getNumberColor(cell.count)
-        ctx.font = `${DOT_SIZE}px monospace`
+        ctx.font = `${Math.max(DOT_SIZE * 0.6, 8)}px monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(cell.count.toString(), centerX, centerY)
@@ -267,7 +274,7 @@ export default function BoardCanvas({ isMultiplayer = false }: BoardCanvasProps)
   }, [hoveredCell, gameStatus, flagMode, isMultiplayer, gameStore, multiStore, isExploding])
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
+    <div className="flex justify-center items-center min-h-screen p-8">
       <canvas
         ref={canvasRef}
         width={canvasWidth}
